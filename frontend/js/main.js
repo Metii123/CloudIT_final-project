@@ -5,9 +5,11 @@ $(function() {
             renderEvents(applyFilters(getEvents()));
         });
 
+
         $("#filter-form input, #filter-form select").on("input change", function() {
             renderEvents(applyFilters(getEvents()));
         });
+        
     }
 
 /* EventDetail.html */
@@ -169,6 +171,7 @@ function populateDepartmentFilter() {
   });
 }
 
+
 function applyFilters(events) {
   const category = $("#category-filter").val();
   const department = $("#department-filter").val();
@@ -215,6 +218,8 @@ function renderEvents(events) {
     $list.append(card);
   });
 }
+
+
 
 function renderMyRegistrations() {
   const $list = $("#registrations-list");
@@ -334,6 +339,7 @@ function renderOrganizerEvents() {
       renderOrganizerEvents();
     }
   });
+
 
   /* Organizer removing a student from their event(removing their registration)*/
   $(".remove-registrant-btn").on("click", function () {
