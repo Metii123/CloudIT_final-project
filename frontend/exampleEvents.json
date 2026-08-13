@@ -1,0 +1,38 @@
+[
+  {
+    "id": "evt-1",
+    "title": "Intro to Cyber Security",
+    "description": "Covering the basics of Cyber Security",
+    "category": "workshop",
+    "department": "Computer Science",
+    "date": "2026-08-20",
+    "time": "14:00",
+    "location": "Room WH C 353",
+    "capacity": 30,
+    "organizerId": "org-1"
+  },
+  {
+    "id": "evt-2",
+    "title": "Intro to Web Applications",
+    "description": "Learn the basics of developing Web Applications",
+    "category": "academic",
+    "department": "Computer Science",
+    "date": "2026-08-22",
+    "time": "10:00",
+    "location": "Room WH TGS 1a 303",
+    "capacity": 45,
+    "organizerId": "org-1"
+  },
+  {
+    "id": "evt-3",
+    "title": "Semester closing get-together",
+    "description": "End off the semester with food, music, and games on the campus lawn.",
+    "category": "social",
+    "department": "AStA HTW Berlin",
+    "date": "2026-08-31",
+    "time": "17:30",
+    "location": "WH Campus-lawn",
+    "capacity": 500,
+    "organizerId": "org-1"
+  }
+]

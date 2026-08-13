@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Dashboard - Campus Events Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="brand">Campus Events</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Events</a></li>
+                <li><a href="myRegistrations.html">My Registrations</a></li>
+                <li><a href="organizerDashboard.html">Organizer Dashboard</a></li>
+            </ul>
+
+            <select id="role-switch">
+                <option value="guest">Guest</option>
+                <option value="student">Student</option>
+                <option value="organizer">Organizer</option>
+            </select>
+            
+        </nav>
+    </header>
+
+    <main>
+        <section id="organizer-dashboard">
+            <h1>Organizer Dashboard</h1>
+
+            <button id="new-event-btn">+ New Event</button>
+
+            <form id="event-form" hidden novalidate>
+                <input type="hidden" id="event-id-field" name="eventId">
+            
+            <label for="title">Title
+                <input type="text" id="title" name="title" required>
+            </label>
+
+            <label for="description">Description
+                <textarea id="description" name="description" required></textarea>
+            </label>
+
+            <label for="category">Category
+                <select id="category" name="category" required>
+                    <option value="workshop">Workshop</option>
+                    <option value="social">Social</option>
+                    <option value="career">Career</option>
+                    <option value="academic">Academic</option>
+                </select>
+            </label>
+
+            <label for="department">Department
+                <input type="text" id="department" name="department" required>
+            </label>
+
+            <label for="date">Date
+                <input type="date" id="date" name="date" required>
+            </label>
+
+            <label for="time">Time
+                <input type="time" id="time" name="time" required>
+            </label>
+
+            <label for="location">Location
+                <input type="text" id="location" name="location" required>
+            </label>
+
+            <label for="capacity">Capacity
+                <input type="number" id="capacity" name="capacity" min="1" required>
+            </label>
+
+            <button type="submit">Save Event</button>
+            </form>
+            <h2>My Events</h2>
+            <div id="organizer-event-list"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>2026 Campus Events Hub</p>
+        <button id="reset-data-btn" type="button">Reset local demo data</button>
+    </footer>    
+
+    <script src="js/jquery-4.0.0.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/main.js"></script>
+    
+</body>
+</html>
