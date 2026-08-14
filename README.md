@@ -4,7 +4,7 @@
 
 A Platform for Event-organisers from the University, where they can publish events and workshops for students to browse and register them. 
 
-Organisers create and manage events and see who has signed up. Students browser and filter events by department and category, register for them, add personal notes to their registrations and cancel if their plans change. A role switcher in the navigation bar lets you move between the Guest, Student and Organiser views without a login system.
+Organisers create and manage events and see who has signed up. Students browse and filter events by department and category, register for them, add personal notes to their registrations and cancel if their plans change. A role switcher in the navigation bar lets you move between the Guest, Student and Organiser views without a login system.
 
 ### **Repository structure:**
 ```
@@ -17,7 +17,9 @@ README.md
 ```
 
 ### **Running locally:**
-Requires Docker Desktop: 
-docker compose --build
-open http://localhost:8080
-To stop: ctrl + C, then: docker compose down
+Requires Docker Desktop
+
+```bash
+docker compose up --build
+```
+Then open http://localhost:8080. To stop: ctrl + C, then: `docker compose down`.
