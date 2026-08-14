@@ -23,3 +23,6 @@ Requires Docker Desktop
 docker compose up --build
 ```
 Then open http://localhost:8080. To stop: ctrl + C, then: `docker compose down`.
+
+### **Serverless Component**
+The serverless component is an Azure Function on a Consumption plan. It generates a booking refrence when a student registers, and only runs when it is called.
