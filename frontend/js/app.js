@@ -1,4 +1,4 @@
-const FUNCTION_URL = "";
+const FUNCTION_URL = "https://campus-fn-21652.azurewebsites.net";
 
 
 const STORAGE_KEYS = {

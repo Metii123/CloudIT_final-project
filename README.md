@@ -1,5 +1,6 @@
 # CloudIT_final-project
 ## **HTW Campus Events Hub**
+**Hosted link:** http://4.226.53.18
 
 A Platform for Event-organisers from the University, where they can publish events and workshops for students to browse and register them. 
 

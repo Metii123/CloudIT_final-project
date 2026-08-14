@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 
 # DS_Store
 .DS_Store
+
+node_module/
+local.settings.json
