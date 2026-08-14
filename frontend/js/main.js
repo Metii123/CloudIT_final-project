@@ -1,32 +1,32 @@
-$(function() {
-    if ($("#event-list").length) {
-        seedEventsIfEmpty(function() {
-            populateDepartmentFilter();
-            renderEvents(applyFilters(getEvents()));
-        });
+$(async function () {
+  if ($("#event-list").length) {
+    try {
+      const events = await getEvents();
+      const registrations = await getRegistrations();
 
+      populateDepartmentFilter(events);
+      renderEvents(applyFilters(events), registrations);
 
-        $("#filter-form input, #filter-form select").on("input change", function() {
-            renderEvents(applyFilters(getEvents()));
-        });
-        
+      $("#filter-form input, #filter-form select").on("input change", function () {
+        renderEvents(applyFilters(events), registrations);
+      });
+    } catch (err) {
+      console.error(err);
+      $("#event-list").html("<p>Could not load events.</p>");
     }
+  }
 
-/* EventDetail.html */
+
+
+  /* EventDetail.html */
   if ($("#event-detail").length) {
-    seedEventsIfEmpty(function () {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
-      const event = getEventById(id);
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-      if (!event) {
-        $("#event-detail").html("<p>Event not found.</p>");
-        return;
-      }
-
-      const spotsLeft = event.capacity - getRegistrations().filter(
-        r => r.eventId === event.id && r.status === "registered"
-      ).length;
+    try {
+      const event = await getEventById(id);
+      const registrations = await getRegistrationsForEvent(event.id);
+      const spotsLeft = event.capacity - registrations.length;
 
       $("#event-title").text(event.title);
       $("#event-description").text(event.description);
@@ -42,10 +42,13 @@ $(function() {
       if (getRole() !== "student") {
         $("#register-link").hide();
       }
-    });
+    } catch (err) {
+      console.error(err);
+      $("#event-detail").html("<p>Event not found.</p>");
+    }
   }
 
-/* Register.html -> only students may register */
+  /* Register.html -> only students may register */
   if ($("#register-form").length) {
     const allowed = requireRole(
       "student",
@@ -54,24 +57,25 @@ $(function() {
     );
 
     if (allowed) {
-      seedEventsIfEmpty(function () {
-        const params = new URLSearchParams(window.location.search);
-        const eventId = params.get("id");
-        const event = getEventById(eventId);
+      const params = new URLSearchParams(window.location.search);
 
-        if (event) {
-          $("#register-event-name").text(event.title);
-          $("#event-id").val(event.id);
-        }
-      });
+      try {
+        const event = await getEventById(params.get("id"));
+        $("#register-event-name").text(event.title);
+        $("#event-id").val(event.id);
+      } catch (err) {
 
-      $("#register-form").on("submit", function (e) {
+        console.error(err);
+      }
+
+      $("#register-form").on("submit", async function (e) {
         e.preventDefault();
 
         let valid = true;
         $("#error-name, #error-email").text("");
 
         const name = $("#student-name").val().trim();
+
         const email = $("#student-email").val().trim();
 
         if (name.length === 0) {
@@ -87,15 +91,25 @@ $(function() {
 
         if (!valid) return;
 
-        createRegistration({
-          eventId: $("#event-id").val(),
-          studentName: name,
-          studentEmail: email,
-          notes: $("#notes").val()
-        });
+        try {
+          await createRegistration({
+            eventId: $("#event-id").val(),
+            studentName: name,
+            studentEmail: email,
+            notes: $("#notes").val()
+          });
 
-        $("#register-form").hide();
-        $("#confirmation-message").prop("hidden", false);
+          const reference = await getConfirmationReference();
+
+          $("#register-form").hide();
+          if (reference) {
+            $("#confirmation-message").text("You're registered! Reference: " + reference);
+          }
+          $("#confirmation-message").prop("hidden", false);
+        } catch (err) {
+          console.error(err);
+          $("#error-name").text("Registration failed. Please try again.");
+        }
       });
     }
   }
@@ -107,11 +121,11 @@ $(function() {
       "Only students have registrations to manage. Switch your role to Student using the menu above."
     );
     if (allowed) {
-      seedEventsIfEmpty(renderMyRegistrations);
+      await renderMyRegistrations();
     }
   }
 
-/* OrganizerDashboard.html -> only Organizers manage events */
+  /* OrganizerDashboard.html -> only Organizers manage events */
   if ($("#organizer-event-list").length) {
     const allowed = requireRole(
       "organizer",
@@ -120,7 +134,7 @@ $(function() {
     );
 
     if (allowed) {
-      seedEventsIfEmpty(renderOrganizerEvents);
+      await renderOrganizerEvents();
 
       $("#new-event-btn").on("click", function () {
         $("#event-form")[0].reset();
@@ -128,7 +142,7 @@ $(function() {
         $("#event-form").prop("hidden", false);
       });
 
-      $("#event-form").on("submit", function (e) {
+      $("#event-form").on("submit", async function (e) {
         e.preventDefault();
 
         const id = $("#event-id-field").val();
@@ -141,43 +155,43 @@ $(function() {
           time: $("#time").val(),
           location: $("#location").val().trim(),
           capacity: Number($("#capacity").val())
+
         };
+        
 
-        if (id) {
-          const existing = getEventById(id);
-          if (!existing || existing.organizerId !== CURRENT_ORGANIZER_ID) {
-            alert("You can only edit your own events.");
-            return;
+        try {
+          if (id) {
+            await updateEvent(id, eventData);
+          } else {
+            await createEvent(eventData);
           }
-          updateEvent(id, eventData);
-        } else {
-          createEvent(eventData);
+          $("#event-form").prop("hidden", true);
+          await renderOrganizerEvents();
+        } catch (err) {
+          console.error(err);
+          alert("Could not save the event.");
         }
-
-        $("#event-form").prop("hidden", true);
-        renderOrganizerEvents();
       });
+
     }
   }
-
 });
 
 /* other helper functions */
-function populateDepartmentFilter() {
-  const departments = [...new Set(getEvents().map(e => e.department))];
+function populateDepartmentFilter(events) {
+  const departments = [...new Set(events.map((e) => e.department))];
   const $select = $("#department-filter");
-  departments.forEach(dep => {
+  departments.forEach((dep) => {
     $select.append(`<option value="${escapeHTML(dep)}">${escapeHTML(dep)}</option>`);
   });
 }
 
-
 function applyFilters(events) {
   const category = $("#category-filter").val();
   const department = $("#department-filter").val();
-  const dateSort = $("#date-sort").val(); 
+  const dateSort = $("#date-sort").val();
 
-  const filtered = events.filter(e => {
+  const filtered = events.filter((e) => {
     const matchesCategory = !category || e.category === category;
     const matchesDepartment = !department || e.department === department;
     return matchesCategory && matchesDepartment;
@@ -192,7 +206,7 @@ function applyFilters(events) {
   return filtered;
 }
 
-function renderEvents(events) {
+function renderEvents(events, registrations) {
   const $list = $("#event-list");
   $list.empty();
 
@@ -201,10 +215,10 @@ function renderEvents(events) {
     return;
   }
 
-  events.forEach(e => {
-    const spotsLeft = e.capacity - getRegistrations().filter(
-      r => r.eventId === e.id && r.status === "registered"
-    ).length;
+  events.forEach((e) => {
+    const spotsLeft =
+      e.capacity -
+      registrations.filter((r) => r.eventId === e.id && r.status === "registered").length;
 
     const card = `
       <article class="event-card">
@@ -219,21 +233,28 @@ function renderEvents(events) {
   });
 }
 
-
-
-function renderMyRegistrations() {
+async function renderMyRegistrations() {
   const $list = $("#registrations-list");
   $list.empty();
 
-  const regs = getMyRegistrations();
+  let regs;
+  let events;
+  try {
+    regs = await getMyRegistrations();
+    events = await getEvents();
+  } catch (err) {
+    console.error(err);
+    $list.append("<p>Could not load your registrations.</p>");
+    return;
+  }
 
   if (regs.length === 0) {
     $list.append("<p>You haven't registered for any events yet.</p>");
     return;
   }
 
-  regs.forEach(r => {
-    const event = getEventById(r.eventId);
+  regs.forEach((r) => {
+    const event = events.find((e) => e.id === r.eventId);
     if (!event) return;
 
     const row = `
@@ -250,46 +271,70 @@ function renderMyRegistrations() {
     $list.append(row);
   });
 
-  $(".save-notes-btn").on("click", function () {
+  $(".save-notes-btn").on("click", async function () {
     const $card = $(this).closest(".event-card");
     const regId = $card.data("reg-id");
     const newNotes = $card.find(".notes-input").val();
-    updateRegistration(regId, { notes: newNotes });
-    renderMyRegistrations();
+    try {
+      await updateRegistration(regId, { notes: newNotes });
+      await renderMyRegistrations();
+    } catch (err) {
+      console.error(err);
+    }
   });
 
-  $(".cancel-btn").on("click", function () {
+  $(".cancel-btn").on("click", async function () {
     const $card = $(this).closest(".event-card");
     const regId = $card.data("reg-id");
-    if (confirm("Cancel this registration?")) {
-      cancelRegistration(regId);
-      renderMyRegistrations();
+    if (!confirm("Cancel this registration?")) return;
+    try {
+      await cancelRegistration(regId);
+      await renderMyRegistrations();
+    } catch (err) {
+      console.error(err);
     }
   });
 }
 
-
-function renderOrganizerEvents() {
+async function renderOrganizerEvents() {
   const $list = $("#organizer-event-list");
   $list.empty();
 
-/* Organizer can only manage their own events */
-  const events = getEvents().filter(e => e.organizerId === CURRENT_ORGANIZER_ID);
+  let allEvents;
+  let registrations;
+  try {
+    allEvents = await getEvents();
+    registrations = await getRegistrations();
+  } catch (err) {
+    console.error(err);
+    $list.append("<p>Could not load your events.</p>");
+    return;
+  }
+
+  /* Organizer can only manage their own events */
+  const events = allEvents.filter((e) => e.organizerId === CURRENT_ORGANIZER_ID);
 
   if (events.length === 0) {
     $list.append("<p>No events yet - create your first one above.</p>");
     return;
   }
 
-  events.forEach(e => {
-    const registrants = getRegistrationsForEvent(e.id);
+  events.forEach((e) => {
+    const registrants = registrations.filter(
+      (r) => r.eventId === e.id && r.status === "registered"
+    );
 
     const registrantList = registrants.length
-      ? "<ul>" + registrants.map(r =>
-          `<li>${escapeHTML(r.studentName)} (${escapeHTML(r.studentEmail)})
+      ? "<ul>" +
+        registrants
+          .map(
+            (r) =>
+              `<li>${escapeHTML(r.studentName)} (${escapeHTML(r.studentEmail)})
              <button class="remove-registrant-btn" data-reg-id="${escapeHTML(r.id)}">Remove</button>
            </li>`
-        ).join("") + "</ul>"
+          )
+          .join("") +
+        "</ul>"
       : "<p class='meta'>No one registered yet.</p>";
 
     const card = `
@@ -310,7 +355,7 @@ function renderOrganizerEvents() {
 
   $(".edit-btn").on("click", function () {
     const id = $(this).closest(".event-card").data("event-id");
-    const event = getEventById(id);
+    const event = events.find((e) => e.id === id);
     if (!event) return;
 
     $("#event-id-field").val(event.id);
@@ -327,26 +372,33 @@ function renderOrganizerEvents() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  $(".delete-btn").on("click", function () {
+  $(".delete-btn").on("click", async function () {
     const id = $(this).closest(".event-card").data("event-id");
-    const event = getEventById(id);
+    const event = events.find((e) => e.id === id);
     if (!event || event.organizerId !== CURRENT_ORGANIZER_ID) {
       alert("You can only delete your own events.");
       return;
     }
-    if (confirm("Delete this event? This cannot be undone.")) {
-      deleteEvent(id);
-      renderOrganizerEvents();
+
+
+    if (!confirm("Delete this event? This cannot be undone.")) return;
+    try {
+      await deleteEvent(id);
+      await renderOrganizerEvents();
+    } catch (err) {
+      console.error(err);
     }
   });
 
-
   /* Organizer removing a student from their event(removing their registration)*/
-  $(".remove-registrant-btn").on("click", function () {
+  $(".remove-registrant-btn").on("click", async function () {
     const regId = $(this).data("reg-id");
-    if (confirm("Remove this registrant from the event?")) {
-      removeRegistrationByOrganizer(regId);
-      renderOrganizerEvents();
+    if (!confirm("Remove this registrant from the event?")) return;
+    try {
+      await removeRegistrationByOrganizer(regId);
+      await renderOrganizerEvents();
+    } catch (err) {
+      console.error(err);
     }
   });
 }
