@@ -149,7 +149,7 @@ function getMyRegistrations() {
 async function getConfirmationReference() {
   if (!FUNCTION_URL) return null;
   try {
-    const response = await fetch(FUNCTION_URL + "/api/confirmation");
+    const response = await fetch(FUNCTION_URL + "/api/function");
     if (!response.ok) return null;
     const data = await response.json();
     return data.reference;
