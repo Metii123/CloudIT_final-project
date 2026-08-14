@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ACRNAME.azurecr.io/frontend:v1
+          image: htwcampusevents9660.azurecr.io/frontend:v1
           ports:
             - containerPort: 80
           readinessProbe:

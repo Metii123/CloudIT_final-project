@@ -63,7 +63,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ACRNAME.azurecr.io/backend:v1
+          image: htwcampusevents9660.azurecr.io/backend:v1
           ports:
             - containerPort: 3000
           env:
