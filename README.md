@@ -6,6 +6,8 @@ A Platform for Event-organisers from the University, where they can publish even
 
 Organisers create and manage events and see who has signed up. Students browse and filter events by department and category, register for them, add personal notes to their registrations and cancel if their plans change. A role switcher in the navigation bar lets you move between the Guest, Student and Organiser views without a login system.
 
+I've also added a **Reset demo data** button, which clears everything and restores sample events and the guest role, so the website can be demoed from a clean state without redeploying.
+
 ### **Repository structure:**
 ```
 frontend/ - 5 pages, nginx config, Dockerfile
